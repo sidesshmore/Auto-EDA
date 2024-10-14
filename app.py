@@ -121,24 +121,6 @@ def perform_pca(df):
     fig.update_traces(line_color='rgb(0, 128, 255)', line_width=2)
     st.plotly_chart(fig)
 
-    # Show PCA results
-    # st.write("First two principal components:")
-    # pca_df = pd.DataFrame(data=pca_result[:, :2], columns=['PC1', 'PC2'])
-    # fig = px.scatter(pca_df, x='PC1', y='PC2', title='PCA: First Two Principal Components',
-    #                  color=df.columns[0], color_continuous_scale='Viridis')
-    # st.plotly_chart(fig)
-
-# Function to show categorical data analysis
-# def show_categorical_analysis(df):
-#     st.write("### Categorical Data Analysis")
-#     categorical_columns = df.select_dtypes(include=['object', 'category']).columns
-
-#     for col in categorical_columns:
-#         fig = px.bar(df[col].value_counts().reset_index(), x='index', y=col, title=f"Distribution of {col}",
-#                      color='index', color_discrete_sequence=px.colors.qualitative.Set3)
-#         fig.update_layout(showlegend=False)
-#         st.plotly_chart(fig)
-
 # Function to generate a comprehensive report
 def generate_report(df):
     report = io.StringIO()
@@ -201,12 +183,6 @@ if uploaded_file is not None:
     
     # Show scatter plots
     show_scatter_plots(df)
-    
-    # Perform and visualize PCA
-    # perform_pca(df)
-    
-    # Show categorical data analysis
-    # show_categorical_analysis(df)
     
     # Generate and download the report
     if st.button("Generate and Download Report"):
