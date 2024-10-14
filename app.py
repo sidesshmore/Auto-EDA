@@ -216,3 +216,6 @@ if uploaded_file is not None:
         )
 else:
     st.write("Awaiting CSV file upload...")
+
+st.write("### Connect with Me! ")
+st.write("[LinkedIn](https://www.linkedin.com/in/sidessh/) | [Twitter](https://x.com/SidesshMore)")
