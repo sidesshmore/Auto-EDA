@@ -90,12 +90,17 @@ def show_scatter_plots(df):
     st.write("### Scatter Plots")
     numeric_columns = df.select_dtypes(include=[np.number]).columns
 
-    x_axis = st.selectbox("Select X-axis", numeric_columns)
-    y_axis = st.selectbox("Select Y-axis", numeric_columns)
+    # Default selection
+    default_x = numeric_columns[0]  
+    default_y = numeric_columns[1]  
+
+    x_axis = st.selectbox("Select X-axis", numeric_columns, index=0)
+    y_axis = st.selectbox("Select Y-axis", numeric_columns[numeric_columns != x_axis], index=1)
 
     fig = px.scatter(df, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}",
                      color=df.columns[0], color_continuous_scale='Viridis')
     st.plotly_chart(fig)
+
 
 # Function to perform and visualize PCA
 def perform_pca(df):
