@@ -87,7 +87,7 @@ def show_distribution_plots(df):
 
 # Function to show scatter plots
 def show_scatter_plots(df):
-    st.write("### Scatter Plots")
+    st.write("### Scatter Plots (You can change the X and Y axis)")
     numeric_columns = df.select_dtypes(include=[np.number]).columns
 
     # Default selection
