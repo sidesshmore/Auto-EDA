@@ -121,6 +121,20 @@ def perform_pca(df):
     fig.update_traces(line_color='rgb(0, 128, 255)', line_width=2)
     st.plotly_chart(fig)
 
+def show_categorical_pie_charts(df):
+    st.write("### Categorical Data Distribution")
+    categorical_columns = df.select_dtypes(include=['object', 'category']).columns
+
+    if len(categorical_columns) == 0:
+        st.write("No categorical columns found!")
+    else:
+        for col in categorical_columns:
+            st.write(f"#### Distribution of {col}")
+            data = df[col].value_counts()
+
+            fig = px.pie(values=data.values, names=data.index, title=f"Distribution of {col}")
+            st.plotly_chart(fig)
+
 # Function to generate a comprehensive report
 def generate_report(df):
     report = io.StringIO()
@@ -158,7 +172,6 @@ def generate_report(df):
     
     return report.getvalue()
 
-# Main code execution
 if uploaded_file is not None:
     # Load and preprocess the data
     df = load_and_preprocess_data(uploaded_file)
@@ -168,6 +181,9 @@ if uploaded_file is not None:
     
     # Show basic information
     show_basic_info(df)
+    
+    # Show pie chart for categorical data
+    show_categorical_pie_charts(df)
     
     # Show basic statistics
     show_basic_statistics(df)
