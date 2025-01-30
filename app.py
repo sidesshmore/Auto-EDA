@@ -12,14 +12,21 @@ import plotly.graph_objects as go
 import io
 
 # Set page config
-st.set_page_config(page_title="AutoML EDA Pipeline")
+st.set_page_config(page_title="AutoML EDA Pipeline", layout="wide")
 
 # Title and description
-st.title("Auto Pipeline for Exploratory Data Analysis (EDA) 😎⚙️")
-st.write("Upload your CSV file to get started with automatic EDA!")
+st.title("Auto Pipeline for Exploratory Data Analysis (EDA) ⚙️")
 
-# File upload
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+# Function to load sample data
+@st.cache_data
+def load_sample_data(dataset_name):
+    if dataset_name == "Iris Dataset":
+        return pd.read_csv('https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv')
+    elif dataset_name == "Titanic Dataset":
+        return pd.read_csv('https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv')
+    elif dataset_name == "Boston Housing Dataset":
+        return pd.read_csv('https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv')
+    return None
 
 # Function to load and preprocess data
 @st.cache_data
@@ -52,7 +59,6 @@ def show_missing_data(df):
     st.write("### Missing Data Visualization")
     missing_data = df.isnull().sum()
     missing_data = missing_data[missing_data > 0].sort_values(ascending=False)
-
     if not missing_data.empty:
         fig = px.bar(x=missing_data.index, y=missing_data.values,
                      labels={'x': 'Features', 'y': 'Number of Missing Values'},
@@ -69,7 +75,6 @@ def show_correlation_heatmap(df):
     st.write("### Correlation Heatmap")
     numeric_df = df.select_dtypes(include=[np.number])
     corr = numeric_df.corr()
-
     fig = px.imshow(corr, color_continuous_scale='RdYlBu_r', aspect="auto")
     fig.update_layout(title='Correlation Heatmap')
     st.plotly_chart(fig)
@@ -78,7 +83,6 @@ def show_correlation_heatmap(df):
 def show_distribution_plots(df):
     st.write("### Distribution Plots")
     numeric_columns = df.select_dtypes(include=[np.number]).columns
-
     for col in numeric_columns:
         fig = px.histogram(df, x=col, marginal="box", title=f"Distribution of {col}",
                            color_discrete_sequence=['rgba(0, 128, 255, 0.7)'])
@@ -89,23 +93,25 @@ def show_distribution_plots(df):
 def show_scatter_plots(df):
     st.write("### Scatter Plots (You can change the X and Y axis)")
     numeric_columns = df.select_dtypes(include=[np.number]).columns
-
-    # Default selection
-    default_x = numeric_columns[0]  
-    default_y = numeric_columns[1]  
-
-    x_axis = st.selectbox("Select X-axis", numeric_columns, index=0)
-    y_axis = st.selectbox("Select Y-axis", numeric_columns[numeric_columns != x_axis], index=1)
-
-    fig = px.scatter(df, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}",
-                     color=df.columns[0], color_continuous_scale='Viridis')
-    st.plotly_chart(fig)
-
+    
+    if len(numeric_columns) >= 2:
+        # Default selection
+        x_axis = st.selectbox("Select X-axis", numeric_columns, index=0)
+        y_axis = st.selectbox("Select Y-axis", numeric_columns[numeric_columns != x_axis], index=1)
+        fig = px.scatter(df, x=x_axis, y=y_axis, title=f"Scatter Plot: {x_axis} vs {y_axis}",
+                         color=df.columns[0], color_continuous_scale='Viridis')
+        st.plotly_chart(fig)
+    else:
+        st.write("Not enough numeric columns for scatter plot")
 
 # Function to perform and visualize PCA
 def perform_pca(df):
     st.write("### Principal Component Analysis (PCA)")
     numeric_df = df.select_dtypes(include=[np.number])
+    
+    if numeric_df.shape[1] < 2:
+        st.write("Not enough numeric columns for PCA")
+        return
     
     # Impute missing values
     imputer = SimpleImputer(strategy='mean')
@@ -129,14 +135,12 @@ def perform_pca(df):
 def show_categorical_pie_charts(df):
     st.write("### Categorical Data Distribution")
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns
-
     if len(categorical_columns) == 0:
         st.write("No categorical columns found!")
     else:
         for col in categorical_columns:
             st.write(f"#### Distribution of {col}")
             data = df[col].value_counts()
-
             fig = px.pie(values=data.values, names=data.index, title=f"Distribution of {col}")
             st.plotly_chart(fig)
 
@@ -177,27 +181,66 @@ def generate_report(df):
     
     return report.getvalue()
 
-if uploaded_file is not None:
-    # Load and preprocess the data
-    df = load_and_preprocess_data(uploaded_file)
+# Create tabs for demo data and file upload
+st.write("Choose a sample dataset or upload your own CSV file!")
+tab1, tab2 = st.tabs(["📊 Demo Datasets", "📁 Upload Your Data"])
+
+with tab1:
+    demo_dataset = st.selectbox(
+        "Select a sample dataset",
+        ["Select a dataset...", "Iris Dataset", "Titanic Dataset", "Boston Housing Dataset"]
+    )
     
+    if demo_dataset != "Select a dataset...":
+        df = load_sample_data(demo_dataset)
+        st.success(f"Loaded {demo_dataset} successfully!")
+        
+        # Add dataset descriptions
+        if demo_dataset == "Iris Dataset":
+            st.info("""
+            The Iris dataset contains measurements for 150 iris flowers from three different species.
+            Features include: sepal length, sepal width, petal length, and petal width.
+            """)
+        elif demo_dataset == "Titanic Dataset":
+            st.info("""
+            The Titanic dataset contains information about passengers aboard the Titanic.
+            Features include: age, sex, passenger class, survival status, and more.
+            """)
+        elif demo_dataset == "Boston Housing Dataset":
+            st.info("""
+            The Boston Housing dataset contains information about housing in Boston.
+            Features include: crime rate, room numbers, property tax rates, and more.
+            """)
+
+with tab2:
+    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    if uploaded_file is not None:
+        df = load_and_preprocess_data(uploaded_file)
+
+# Main analysis section
+if 'df' in locals():
     # Display data preview
     st.write("### Preview of the Dataset", df.head())
     
-    # Show basic information
-    show_basic_info(df)
+    # Create columns for better layout
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Show basic information
+        show_basic_info(df)
+        
+        # Show basic statistics
+        show_basic_statistics(df)
+    
+    with col2:
+        # Show missing data visualization
+        show_missing_data(df)
+        
+        # Show correlation heatmap
+        show_correlation_heatmap(df)
     
     # Show pie chart for categorical data
     show_categorical_pie_charts(df)
-    
-    # Show basic statistics
-    show_basic_statistics(df)
-    
-    # Show missing data visualization
-    show_missing_data(df)
-    
-    # Show correlation heatmap
-    show_correlation_heatmap(df)
     
     # Show distribution plots
     show_distribution_plots(df)
@@ -205,7 +248,10 @@ if uploaded_file is not None:
     # Show scatter plots
     show_scatter_plots(df)
     
-    # Generate and download the report
+    # Perform PCA
+    perform_pca(df)
+    
+    # Generate and download report
     if st.button("Generate and Download Report"):
         report = generate_report(df)
         st.download_button(
@@ -215,7 +261,8 @@ if uploaded_file is not None:
             mime='text/plain'
         )
 else:
-    st.write("Awaiting CSV file upload...")
+    st.write("Please select a demo dataset or upload your own CSV file to begin the analysis.")
 
+# Footer
 st.write("### Connect with Me!")
 st.write("[LinkedIn](https://www.linkedin.com/in/sidessh/) | [Twitter](https://x.com/SidesshMore)")
