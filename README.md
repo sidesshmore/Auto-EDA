@@ -4,7 +4,8 @@
 
 > An automated Exploratory Data Analysis tool that transforms your raw data into actionable insights within seconds.
 
-![AutoEda](https://github.com/user-attachments/assets/2d7944d9-cbea-4f5c-845f-07336dfa8cb1)
+![AutoEda](https://github.com/user-attachments/assets/eda82de8-1b92-424c-84db-69b6548442a1)
+
 
 ## 🌟 Features
 
